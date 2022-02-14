@@ -1,0 +1,26 @@
+p {
+	color: green;
+	font-size: 20px;
+}
+
+.username {
+	color: blue;
+}
+
+.username2 {
+	color: orange !important;
+}
+
+#myusername {
+	font-size: 50px;
+}
+
+.button {
+	height: 30px;
+	background-color: aliceblue;
+	border: 1px solid black;
+	border-radius: 5px;
+	display: inline-block;
+	padding: 5px;
+	cursor: pointer;
+}
