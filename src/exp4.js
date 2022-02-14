@@ -15,7 +15,7 @@ function showTooltip(evt, d) {
 
 }
 
-function hideTooltip(d, i, n) {
+function hideTooltip() {
 	document.getElementById('tooltip').style.display = 'none'
 }
 
@@ -73,8 +73,23 @@ async function app() {
 			.transition()
 			.duration(1000)
 			.ease(d3.easeCubic)
-			.attr('r', 5)
-			.attr('fill', 'red')
+			.attr('r', d => {
+				console.log(d.Weight.split('l')[0])
+				let w = Number(d.Weight.split('l')[0])
+				return w / 30;
+			})
+			.attr('opacity', 0.5)
+			.attr('fill', d => {
+				if (d.Nationality === "Spain") {
+					return 'red'
+				}
+
+				if (d.Nationality === "Argentina") {
+					return 'blue'
+				}
+
+				return 'orange'
+			})
 			.attr('cx', d => xScale(Number(d.Age)))
 			.attr('cy', d => yScale(Number(d.Overall)))
 	}

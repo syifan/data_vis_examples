@@ -22,7 +22,7 @@ function app() {
 			.ease(d3.easeCubic)
 			.attr('r', 5)
 			.attr('fill', 'red')
-			.attr('cx', d => Number(d.Age))
+			.attr('cx', d => 20 * (Number(d.Age) - 18))
 			.attr('cy', d => 200 - d.Overall)
 	}
 
