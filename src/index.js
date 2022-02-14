@@ -1,5 +1,5 @@
 import {
 	app
-} from './exp5.js'
+} from './exp6.js'
 
 app()

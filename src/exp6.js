@@ -27,17 +27,13 @@ function showTooltip(evt, d) {
 	`
 }
 
-function hideTooltip(d, i, n) {
+function hideTooltip() {
 	document.getElementById('tooltip').style.display = 'none'
 }
 
-function drawAxis(xScale, yScale) {
-	let leftAxisG = d3.select('svg').append('g')
-		.attr('id', 'left-axis')
-		.attr('transform', 'translate(30, 30)')
-	let bottomAxisG = d3.select('svg').append('g')
-		.attr('id', 'bottom-axis')
-		.attr('transform', 'translate(30, 270)')
+function drawAxis() {
+	let leftAxisG = d3.select('svg').select('#left-axis')
+	let bottomAxisG = d3.select('svg').select('#bottom-axis')
 
 	let bottomAxis = d3.axisBottom(config.xScale)
 	bottomAxisG.call(bottomAxis)
@@ -78,6 +74,7 @@ function render() {
 		.transition()
 		.duration(1000)
 		.ease(d3.easeCubic)
+		.attr('cx', d => config.xScale(Number(d[config.x])))
 		.attr('cy', d => config.yScale(Number(d[config.y])))
 		.attr('opacity', 0.5)
 }
@@ -125,45 +122,101 @@ function registerButtonEvents() {
 }
 
 function createScales() {
+	console.log(config.xMin, config.xMax, config.yMin, config.yMax)
 	let xScale = d3.scaleLinear()
-		.domain([
-			d3.min(data, d => Number(d.Age)),
-			d3.max(data, d => Number(d.Age))
-		])
+		.domain([config.xMin, config.xMax])
 		.range([0, 540])
 	config.xScale = xScale
 
 	let yScale = d3.scaleLinear()
-		.domain([
-			d3.min(data, d => Number(d.Overall)),
-			d3.max(data, d => Number(d.Overall))
-		])
+		.domain([config.yMin, config.yMax])
 		.range([240, 0])
 	config.yScale = yScale
 }
 
-function createCircleCanvas() {
+function prepareGroups() {
 	let circleCanvas = d3.select('svg').append('g')
 		.attr('id', 'circles')
 		.attr('transform', 'translate(30, 30)')
 	config.canvas = circleCanvas
+
+	let leftAxisG = d3.select('svg').append('g')
+		.attr('id', 'left-axis')
+		.attr('transform', 'translate(30, 30)')
+	config.leftAxisG = leftAxisG
+
+	let bottomAxisG = d3.select('svg').append('g')
+		.attr('id', 'bottom-axis')
+		.attr('transform', 'translate(30, 270)')
+	config.bottomAxisG = bottomAxisG
 }
 
 async function loadData() {
 	return d3.csv('data.csv').then(d => {
 		data = d.slice(0, 1000)
 		config.data = data
+
+		config.xMin = d3.min(data, d => Number(d.Age))
+		config.xMax = d3.max(data, d => Number(d.Age))
+		config.yMin = d3.min(data, d => Number(d.Potential))
+		config.yMax = d3.max(data, d => Number(d.Potential))
+
 		console.log(data)
+	})
+}
+
+function registerDraggingEvents() {
+	d3.select('svg').on('mousedown', function (evt) {
+		config.dragging = true
+		config.draggingStartX = evt.pageX
+		config.draggingStartY = evt.pageY
+		config.draggingStartMinX = config.xMin
+		config.draggingStartMaxX = config.xMax
+		config.draggingStartMinY = config.yMin
+		config.draggingStartMaxY = config.yMax
+		console.log('dragging', config.draggingStartX, config.draggingStartY)
+	})
+
+	d3.select('svg').on('mousemove', function (evt) {
+		if (config.dragging) {
+			let mouseX = evt.pageX;
+			let mouseY = evt.pageY;
+			let mouseDeltaX = mouseX - config.draggingStartX;
+			let mouseDeltaY = mouseY - config.draggingStartY;
+
+			let deltaX = config.xScale.invert(mouseDeltaX) -
+				config.xScale.invert(0);
+			let deltaY = config.yScale.invert(mouseDeltaY) -
+				config.yScale.invert(0);
+
+			console.log('dragging', mouseDeltaX, mouseDeltaY, deltaX, deltaY);
+
+			config.xMin = config.draggingStartMinX - deltaX;
+			config.xMax = config.draggingStartMaxX - deltaX;
+			config.yMin = config.draggingStartMinY - deltaY;
+			config.yMax = config.draggingStartMaxY - deltaY;
+
+			createScales()
+			drawAxis()
+			render()
+		}
+	});
+
+	d3.select('svg').on('mouseup', function () {
+		config.dragging = false
+		console.log('not dragging')
 	})
 }
 
 async function app() {
 	await loadData()
+	prepareGroups()
 
 	createScales()
 	drawAxis()
-	createCircleCanvas()
+
 	registerButtonEvents()
+	registerDraggingEvents()
 
 	render()
 }
